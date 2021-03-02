@@ -22,7 +22,6 @@ function getWidgetNode(svgContainer, widgetId) {
 function vtkSVGRotatableCrosshairsWidget(publicAPI, model) {
   model.classHierarchy.push('vtkSVGRotatableCrosshairsWidget');
   model.widgetId = `vtkSVGRotatableCrosshairsWidget-${instanceId++}`;
-
   model.calculateReferenceLines = (apiIndex, point) => {
     const { strokeColors, apis } = model;
     if (point[0] === null || point[1] === null) {
@@ -300,13 +299,9 @@ function vtkSVGRotatableCrosshairsWidget(publicAPI, model) {
           stroke-width="${firstLineRotateWidth}"
         >
             <!--First line rotateHandle 0 -->
-            <circle cx="${firstLineRotateHandles[0].x}" cy="${
-        firstLineRotateHandles[0].y
-      }" r="${firstLineRotateHandleRadius}" fill="${firstLineRotateHandleFill}" />
+            <circle cx="${firstLineRotateHandles[0].x}" cy="${firstLineRotateHandles[0].y}" r="${firstLineRotateHandleRadius}" fill="${firstLineRotateHandleFill}" />
             <!--First line rotateHandle 1 -->
-            <circle cx="${firstLineRotateHandles[1].x}" cy="${
-        firstLineRotateHandles[1].y
-      }" r="${firstLineRotateHandleRadius}" fill="${firstLineRotateHandleFill}" />
+            <circle cx="${firstLineRotateHandles[1].x}" cy="${firstLineRotateHandles[1].y}" r="${firstLineRotateHandleRadius}" fill="${firstLineRotateHandleFill}" />
         </g>
         <g
           stroke-dasharray="${strokeDashArray}"
@@ -338,17 +333,10 @@ function vtkSVGRotatableCrosshairsWidget(publicAPI, model) {
         stroke-width=${secondLineRotateWidth}
       >
         <!--Second line rotateHandle 0 -->
-        <circle cx="${secondLineRotateHandles[0].x}" cy="${
-        secondLineRotateHandles[0].y
-      }" r="${secondLineRotateHandleRadius}" fill="${secondLineRotateHandleFill}" />
+        <circle cx="${secondLineRotateHandles[0].x}" cy="${secondLineRotateHandles[0].y}" r="${secondLineRotateHandleRadius}" fill="${secondLineRotateHandleFill}" />
         <!--Second line rotateHandle 1 -->
-        <circle cx="${secondLineRotateHandles[1].x}" cy="${
-        secondLineRotateHandles[1].y
-      }" r="${secondLineRotateHandleRadius}" fill="${secondLineRotateHandleFill}" />
+        <circle cx="${secondLineRotateHandles[1].x}" cy="${secondLineRotateHandles[1].y}" r="${secondLineRotateHandleRadius}" fill="${secondLineRotateHandleFill}" />
       </g>
-      <circle cx="${width - 20}" cy="${20}" r="10" fill="${
-        strokeColors[apiIndex]
-      }" />
       </g>
 
       `;

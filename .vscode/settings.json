@@ -1,5 +1,5 @@
 {
-  "editor.rulers": [80, 120],
+  "editor.rulers": [80],
 
   // ===
   // Spacing
@@ -18,13 +18,22 @@
   // ===
 
   "editor.formatOnSave": true,
-  "eslint.autoFixOnSave": true,
+  "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": true
+  },
   "eslint.run": "onSave",
+  "eslint.alwaysShowStatus": true,
+  "eslint.options": {
+    "configFile": ".eslintrc.json"
+  },
   "eslint.validate": [
-    { "language": "javascript", "autoFix": true },
-    { "language": "javascriptreact", "autoFix": true }
+    "javascript",
+    "javascriptreact",
   ],
-  "prettier.disableLanguages": [],
-  "prettier.endOfLine": "lf",
-  "workbench.colorCustomizations": {}
+  "[javascript]": {
+    "editor.formatOnSave": false
+  },
+  "[javascriptreact]": {
+    "editor.formatOnSave": false
+  },
 }
