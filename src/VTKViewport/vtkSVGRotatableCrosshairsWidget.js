@@ -524,7 +524,7 @@ const DEFAULT_VALUES = {
   centerRadius: 20,
   strokeDashArray: '',
   display: true,
-  displayDot: false,
+  displayDot: true,
 };
 
 // ----------------------------------------------------------------------------

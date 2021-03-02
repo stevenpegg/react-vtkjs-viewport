@@ -52,6 +52,7 @@ export default class View2D extends Component {
       onNewSegmentationRequested: () => {},
     },
     showRotation: false,
+    showOverlay: true,
   };
 
   constructor(props) {
