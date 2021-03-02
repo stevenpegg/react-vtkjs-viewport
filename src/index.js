@@ -3,7 +3,9 @@ import View3D from './VTKViewport/View3D';
 import vtkInteractorStyleMPRSlice from './VTKViewport/vtkInteractorStyleMPRSlice.js';
 import vtkInteractorStyleMPRWindowLevel from './VTKViewport/vtkInteractorStyleMPRWindowLevel.js';
 import vtkInteractorStyleMPRCrosshairs from './VTKViewport/vtkInteractorStyleMPRCrosshairs.js';
-import vtkInteractorStyleRotatableMPRCrosshairs from './VTKViewport/vtkInteractorStyleRotatableMPRCrosshairs.js';
+import vtkInteractorStyleRotatableMPRCrosshairs, {
+  InteractionOperations,
+} from './VTKViewport/vtkInteractorStyleRotatableMPRCrosshairs.js';
 import vtkInteractorStyleMPRRotate from './VTKViewport/vtkInteractorStyleMPRRotate.js';
 import vtkSVGWidgetManager from './VTKViewport/vtkSVGWidgetManager.js';
 import vtkSVGCrosshairsWidget from './VTKViewport/vtkSVGCrosshairsWidget.js';
@@ -25,6 +27,7 @@ export {
   vtkInteractorStyleMPRWindowLevel,
   vtkInteractorStyleMPRCrosshairs,
   vtkInteractorStyleRotatableMPRCrosshairs,
+  InteractionOperations,
   vtkInteractorStyleMPRRotate,
   vtkInteractorStyleMPRSlice,
   vtkSVGWidgetManager,
