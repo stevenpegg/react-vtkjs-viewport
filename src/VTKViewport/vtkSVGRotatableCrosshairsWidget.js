@@ -299,9 +299,13 @@ function vtkSVGRotatableCrosshairsWidget(publicAPI, model) {
           stroke-width="${firstLineRotateWidth}"
         >
             <!--First line rotateHandle 0 -->
-            <circle cx="${firstLineRotateHandles[0].x}" cy="${firstLineRotateHandles[0].y}" r="${firstLineRotateHandleRadius}" fill="${firstLineRotateHandleFill}" />
+            <circle cx="${firstLineRotateHandles[0].x}" cy="${
+        firstLineRotateHandles[0].y
+      }" r="${firstLineRotateHandleRadius}" fill="${firstLineRotateHandleFill}" />
             <!--First line rotateHandle 1 -->
-            <circle cx="${firstLineRotateHandles[1].x}" cy="${firstLineRotateHandles[1].y}" r="${firstLineRotateHandleRadius}" fill="${firstLineRotateHandleFill}" />
+            <circle cx="${firstLineRotateHandles[1].x}" cy="${
+        firstLineRotateHandles[1].y
+      }" r="${firstLineRotateHandleRadius}" fill="${firstLineRotateHandleFill}" />
         </g>
         <g
           stroke-dasharray="${strokeDashArray}"
@@ -333,12 +337,22 @@ function vtkSVGRotatableCrosshairsWidget(publicAPI, model) {
         stroke-width=${secondLineRotateWidth}
       >
         <!--Second line rotateHandle 0 -->
-        <circle cx="${secondLineRotateHandles[0].x}" cy="${secondLineRotateHandles[0].y}" r="${secondLineRotateHandleRadius}" fill="${secondLineRotateHandleFill}" />
+        <circle cx="${secondLineRotateHandles[0].x}" cy="${
+        secondLineRotateHandles[0].y
+      }" r="${secondLineRotateHandleRadius}" fill="${secondLineRotateHandleFill}" />
         <!--Second line rotateHandle 1 -->
-        <circle cx="${secondLineRotateHandles[1].x}" cy="${secondLineRotateHandles[1].y}" r="${secondLineRotateHandleRadius}" fill="${secondLineRotateHandleFill}" />
+        <circle cx="${secondLineRotateHandles[1].x}" cy="${
+        secondLineRotateHandles[1].y
+      }" r="${secondLineRotateHandleRadius}" fill="${secondLineRotateHandleFill}" />
       </g>
+      ${model.displayDot &&
+        `<circle
+            cx="${width - 20}"
+            cy="${20}"
+            r="10"
+            fill="${strokeColors[apiIndex]}"
+          />`}
       </g>
-
       `;
     } else {
       node.innerHTML = '';
@@ -510,6 +524,7 @@ const DEFAULT_VALUES = {
   centerRadius: 20,
   strokeDashArray: '',
   display: true,
+  displayDot: false,
 };
 
 // ----------------------------------------------------------------------------
@@ -527,6 +542,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'apiIndex',
     'referenceLines',
     'centerRadius',
+    'displayDot',
   ]);
 
   macro.setGetArray(publicAPI, model, ['point', 'referenceLines'], 2);
