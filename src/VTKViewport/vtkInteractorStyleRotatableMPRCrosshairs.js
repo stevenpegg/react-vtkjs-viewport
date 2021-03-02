@@ -8,6 +8,15 @@ import vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
 const { States } = Constants;
 
+export const InteractionOperations = {
+  NONE: 0,
+  MOVE_CROSSHAIRS: 1,
+  PAN: 2,
+  ZOOM: 3,
+  WINDOW_LEVEL: 4,
+  SLICE: 5,
+};
+
 const operations = {
   ROTATE_CROSSHAIRS: 0,
   MOVE_CROSSHAIRS: 1,
@@ -26,6 +35,228 @@ const operations = {
 function vtkInteractorStyleRotatableMPRCrosshairs(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkInteractorStyleRotatableMPRCrosshairs');
+  /**
+   * Perform so additional procession on the mouse event to detect double clicks.
+   */
+  function handleMouseButton(callData, button) {
+    let isDoubleClick = false;
+
+    // Double click detection.
+    if (button > 0) {
+      const time = new Date().getTime();
+      // Check if this is a double click.
+      if (
+        model.lastClickButton === button &&
+        model.lastClickTime !== null &&
+        time - model.lastClickTime < 400
+      ) {
+        isDoubleClick = true;
+        // Reset the click button and time.
+        model.lastClickButton = 0;
+        model.lastClickTime = null;
+      }
+      // Otherwise rememeber the click button and time.
+      else {
+        model.lastClickButton = button;
+        model.lastClickTime = time;
+      }
+    }
+
+    // Process as a normal mouse down event.
+    publicAPI.customHandleMouse(callData, button, isDoubleClick);
+  }
+
+  const superHandleMouseMoveA = publicAPI.handleMouseMove;
+  publicAPI.handleMouseMove = callData => {
+    // Clear the double click detection if the mouse has moved.
+    model.lastClickButton = 0;
+    model.lastClickTime = null;
+    if (model.state === States.IS_WINDOW_LEVEL) {
+      // Process the mouse move.
+      publicAPI.customHandleMouse(callData, 0, false);
+    }
+    if (superHandleMouseMoveA) {
+      superHandleMouseMoveA(callData);
+    }
+  };
+
+  /**
+   * Clear all mouse state information and stop the current interaction operation.
+   */
+  function clearMouseInteractionOperation(model) {
+    // Clear the interaction operation NONE.
+    model.interactionOperation = InteractionOperations.NONE;
+    // Release all buttons.
+    model.leftMouse = false;
+    model.middleMouse = false;
+    model.rightMouse = false;
+  }
+
+  const superHandleLeftButtonPress = publicAPI.handleLeftButtonPress;
+  publicAPI.handleLeftButtonPress = callData => {
+    model.leftMouse = true;
+    // console.log("handleLeftMousePress", callData);
+    // Move the crosshairs (no modifier keys down)
+    if (!callData.shiftKey && !callData.controlKey && !callData.altKey) {
+      publicAPI.startWindowLevel();
+      handleMouseButton(callData, 1);
+    } else if (superHandleLeftButtonPress) {
+      superHandleLeftButtonPress(callData);
+    }
+  };
+
+  publicAPI.superHandleLeftButtonRelease = publicAPI.handleLeftButtonRelease;
+  publicAPI.handleLeftButtonRelease = () => {
+    // Release all buttons and stop the current interaction operation.
+    clearMouseInteractionOperation(model);
+    // console.log("handleLeftMousRelease");
+    switch (model.state) {
+      case States.IS_WINDOW_LEVEL:
+        publicAPI.endWindowLevel();
+        break;
+
+      default:
+        publicAPI.superHandleLeftButtonRelease();
+        break;
+    }
+  };
+
+  const superHandleMiddleButtonPress = publicAPI.handleMiddleButtonPress;
+  publicAPI.handleMiddleButtonPress = callData => {
+    model.middleMouse = true;
+    // console.log("handleMiddleButtonPress", callData);
+    if (!callData.shiftKey && !callData.controlKey && !callData.altKey) {
+      publicAPI.startWindowLevel();
+      handleMouseButton(callData, 2);
+    } else if (superHandleMiddleButtonPress) {
+      superHandleMiddleButtonPress(callData);
+    }
+  };
+
+  publicAPI.superHandleMiddleButtonRelease =
+    publicAPI.handleMiddleButtonRelease;
+  publicAPI.handleMiddleButtonRelease = () => {
+    // Release all buttons and stop the current interaction operation.
+    clearMouseInteractionOperation(model);
+    // console.log("handleMiddleButtonRelease");
+    switch (model.state) {
+      case States.IS_WINDOW_LEVEL:
+        publicAPI.endWindowLevel();
+        break;
+
+      default:
+        publicAPI.superHandleMiddleButtonRelease();
+        break;
+    }
+  };
+
+  const superHandleRightButtonPress = publicAPI.handleRightButtonPress;
+  publicAPI.handleRightButtonPress = callData => {
+    model.rightMouse = true;
+    // console.log("handleRightButtonPress", callData);
+    if (!callData.shiftKey && !callData.controlKey && !callData.altKey) {
+      publicAPI.startWindowLevel();
+      handleMouseButton(callData, 3);
+    } else if (superHandleRightButtonPress) {
+      superHandleRightButtonPress(callData);
+    }
+  };
+
+  publicAPI.superHandleRightButtonRelease = publicAPI.handleRightButtonRelease;
+  publicAPI.handleRightButtonRelease = () => {
+    // Release all buttons and stop the current interaction operation.
+    clearMouseInteractionOperation(model);
+    // console.log("handleRightButtonRelease");
+    switch (model.state) {
+      case States.IS_WINDOW_LEVEL:
+        publicAPI.endWindowLevel();
+        break;
+
+      default:
+        publicAPI.superHandleRightButtonRelease();
+        break;
+    }
+  };
+
+  /**
+   * After a pan or zoom the crosshairs on that view need to be updated, this will re-render them in the correct spot.
+   */
+  publicAPI.updateCrosshairs = model => {
+    const { apis, apiIndex } = model;
+    const thisApi = apis[apiIndex];
+    const worldPos = thisApi.get('cachedCrosshairWorldPosition');
+    if (thisApi.svgWidgets && thisApi.svgWidgets.crosshairsWidget) {
+      thisApi.svgWidgets.crosshairsWidget.moveCrosshairs(
+        worldPos,
+        apis,
+        apiIndex
+      );
+    }
+    if (thisApi.svgWidgets && thisApi.svgWidgets.rotatableCrosshairsWidget) {
+      thisApi.svgWidgets.rotatableCrosshairsWidget.moveCrosshairs(
+        worldPos,
+        apis,
+        apiIndex
+      );
+    }
+  };
+
+  /**
+   * Get if the crosshair position is being changed; note rotating the crosshairs doesn't actually change it's position.
+   */
+  function movingCrosshairs() {
+    return (
+      model.operation &&
+      (model.operation.type === operations.MOVE_CROSSHAIRS ||
+        model.operation.type === operations.MOVE_REFERENCE_LINE)
+    );
+  }
+
+  /**
+   * Get the HU value of the volume at the current crosshair position and the crosshair position.
+   * { huValue: number, crosshairPos: [X, Y, Z] }
+   */
+  publicAPI.getCrosshairValues = () => {
+    try {
+      const { apis, apiIndex } = model;
+      const thisApi = apis[apiIndex];
+      const worldPos = thisApi.get('cachedCrosshairWorldPosition');
+      if (thisApi.volumes && worldPos) {
+        const mapper = thisApi.volumes[0].getVolumes().getMapper();
+        const inputData = mapper.getInputData();
+        const pointData = inputData.getPointData();
+        const scalarData = pointData.getScalars().getData();
+        const volumeDimensions = inputData.getDimensions();
+
+        // A simple function to round the number and clamp it to the min-max range.
+        const roundAndClamp = (num, min, max) => {
+          return num <= min ? min : num >= max ? max : Math.round(num);
+        };
+
+        // Convert the position from world space to the volume space.
+        let indexPos = [0, 0, 0];
+        inputData.worldToIndex(worldPos, indexPos);
+
+        // Round and clamp the position.
+        indexPos[0] = roundAndClamp(indexPos[0], 0, volumeDimensions[0]);
+        indexPos[1] = roundAndClamp(indexPos[1], 0, volumeDimensions[1]);
+        indexPos[2] = roundAndClamp(indexPos[2], 0, volumeDimensions[2]);
+
+        // Convert the volume position to a volume index.
+        const index =
+          indexPos[0] +
+          indexPos[1] * volumeDimensions[0] +
+          indexPos[2] * volumeDimensions[0] * volumeDimensions[1];
+        return {
+          huValue: scalarData[index],
+          crosshairPos: indexPos,
+        };
+      }
+    } catch (error) {
+      console.log('Error reading crosshairs value', error);
+      return 0;
+    }
+  };
 
   function selectOpperation(callData) {
     const { apis, apiIndex, lineGrabDistance } = model;
@@ -784,6 +1015,16 @@ const DEFAULT_VALUES = {
   operation: { type: null },
   lineGrabDistance: 20,
   disableNormalMPRScroll: false,
+  // The current interaction operation.
+  interactionOperation: InteractionOperations.NONE,
+  // Mouse button states.
+  leftMouse: false, // Is the left mouse button currently down?
+  middleMouse: false, // Is the middle mouse button currently down?
+  rightMouse: false, // Is the right mouse button currently down?
+  lastClickButton: 0, // The last mouse button pressed.
+  lastClickTime: null, // The date the last button was pressed.
+  // Optional callback for when the crosshairs are moved: () => void
+  onCrosshairsMoved: undefined,
 };
 
 // ----------------------------------------------------------------------------
