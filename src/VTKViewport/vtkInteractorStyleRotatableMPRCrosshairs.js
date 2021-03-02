@@ -35,6 +35,7 @@ const operations = {
 function vtkInteractorStyleRotatableMPRCrosshairs(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkInteractorStyleRotatableMPRCrosshairs');
+
   /**
    * Perform so additional procession on the mouse event to detect double clicks.
    */

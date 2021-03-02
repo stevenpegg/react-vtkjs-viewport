@@ -2,10 +2,18 @@
 
 > New features on this fork:
 
-- View2D has prop 'showOverlay: bool' which can be used to hide the overlay
-  showing the ww/wl
-- vtkSVGRotatableCrosshairsWidget has a new model value 'displayDot: bool' which
-  can be used to hide the dot shown in the top right corner.
+* **View2D** has prop **showOverlay: bool** which can be used to hide the
+  overlay showing the ww/wl
+* **vtkSVGRotatableCrosshairsWidget** has a new model value **displayDot: bool**
+  which can be used to hide the dot shown in the top right corner.
+* Added new model values for **vtkInteractorStyleManipulator** so you can choose
+  which mouse manipulators to add:
+**
+  addMouseTrackballManipulator: bool
+  addMousePanManipulator: bool
+  addMouseZoomManipulator: bool
+  addMouseScrollManipulator: bool
+**
 
 > VTK.js image viewport component for React
 

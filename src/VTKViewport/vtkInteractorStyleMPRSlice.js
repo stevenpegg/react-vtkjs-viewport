@@ -90,11 +90,19 @@ function vtkInteractorStyleMPRSlice(publicAPI, model) {
 
   function setManipulators() {
     publicAPI.removeAllMouseManipulators();
-    publicAPI.addMouseManipulator(model.trackballManipulator);
-    publicAPI.addMouseManipulator(model.panManipulator);
-    publicAPI.addMouseManipulator(model.zoomManipulator);
-    publicAPI.addMouseManipulator(model.scrollManipulator);
-    publicAPI.updateScrollManipulator();
+    if (model.addMouseTrackballManipulator) {
+      publicAPI.addMouseManipulator(model.trackballManipulator);
+    }
+    if (model.addMousePanManipulator) {
+      publicAPI.addMouseManipulator(model.panManipulator);
+    }
+    if (model.addMouseZoomManipulator) {
+      publicAPI.addMouseManipulator(model.zoomManipulator);
+    }
+    if (model.addMouseScrollManipulator) {
+      publicAPI.addMouseManipulator(model.scrollManipulator);
+      publicAPI.updateScrollManipulator();
+    }
   }
 
   function isCameraViewInitialized(camera) {
@@ -641,6 +649,10 @@ function vtkInteractorStyleMPRSlice(publicAPI, model) {
 const DEFAULT_VALUES = {
   slabThickness: 0.1,
   uid: '',
+  addMouseTrackballManipulator: true,
+  addMousePanManipulator: true,
+  addMouseZoomManipulator: true,
+  addMouseScrollManipulator: true,
 };
 
 // ----------------------------------------------------------------------------
