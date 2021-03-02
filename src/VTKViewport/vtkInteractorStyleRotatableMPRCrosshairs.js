@@ -1016,6 +1016,8 @@ const DEFAULT_VALUES = {
   operation: { type: null },
   lineGrabDistance: 20,
   disableNormalMPRScroll: false,
+  // Extend vtkInteractorStyleMPRSlice?
+  extendVtkInteractorStyleMPRSlice: true,
   // The current interaction operation.
   interactionOperation: InteractionOperations.NONE,
   // Mouse button states.
@@ -1034,7 +1036,9 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Inheritance
-  vtkInteractorStyleMPRSlice.extend(publicAPI, model, initialValues);
+  if (model.extendVtkInteractorStyleMPRSlice) {
+    vtkInteractorStyleMPRSlice.extend(publicAPI, model, initialValues);
+  }
 
   macro.setGet(publicAPI, model, [
     'callback',
