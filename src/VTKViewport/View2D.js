@@ -39,6 +39,8 @@ export default class View2D extends Component {
     orientation: PropTypes.object,
     labelmapRenderingOptions: PropTypes.object,
     showRotation: PropTypes.bool,
+    // Added the ability to hide the overlay (which shows the WW/WL in the bottom right corner)
+    showOverlay: PropTypes.bool,
   };
 
   static defaultProps = {
@@ -759,17 +761,20 @@ export default class View2D extends Component {
     }
 
     const style = { width: '100%', height: '100%', position: 'relative' };
+    // NOTE: The voi and rotation are only used for the overlay which will be hidden unless the prop showOverlay = true
     const voi = this.state.voi;
     const rotation = this.props.showRotation ? this.state.rotation : null;
 
     return (
       <div style={style}>
         <div ref={this.container} style={style} />
-        <ViewportOverlay
-          {...this.props.dataDetails}
-          voi={voi}
-          rotation={rotation}
-        />
+        {this.props.showOverlay && (
+          <ViewportOverlay
+            {...this.props.dataDetails}
+            voi={voi}
+            rotation={rotation}
+          />
+        )}
       </div>
     );
   }
