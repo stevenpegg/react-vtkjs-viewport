@@ -5,6 +5,11 @@ import vtkCoordinate from 'vtk.js/Sources/Rendering/Core/Coordinate';
 import vtkMatrixBuilder from 'vtk.js/Sources/Common/Core/MatrixBuilder';
 import { vec2, vec3, quat } from 'gl-matrix';
 import vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import CustomBase from './Manipulators/customBase';
+import CustomZoom from './Manipulators/customZoom';
+import CustomPan from './Manipulators/customPan';
+import CustomWindowLevel from './Manipulators/customWindowLevel';
+import CustomSlice from './Manipulators/customSlice';
 
 const { States } = Constants;
 
@@ -37,225 +42,62 @@ function vtkInteractorStyleRotatableMPRCrosshairs(publicAPI, model) {
   model.classHierarchy.push('vtkInteractorStyleRotatableMPRCrosshairs');
 
   /**
-   * Perform so additional procession on the mouse event to detect double clicks.
+   * Our custom handler for mouse interactions. This is called when a button is first pressed
+   * with the button number (or 0 when the mouse is being moved). Examine the button states
+   * in the model to identify which buttons are currently pressed. isDoubleClick is true if
+   * the same mouse button is being clicked a second time in quick succession.
    */
-  function handleMouseButton(callData, button) {
-    let isDoubleClick = false;
+  publicAPI.customHandleMouse = (callData, button, isDoubleClick) => {
+    // Fire the onDoubleClick callback?
+    if (isDoubleClick && model.onDoubleClick) {
+      model.onDoubleClick(button, model.apiIndex);
+      return;
+    }
 
-    // Double click detection.
-    if (button > 0) {
-      const time = new Date().getTime();
-      // Check if this is a double click.
+    // Start zoom when both left and right are down.
+    if (
+      (button === 1 && model.rightMouse) ||
+      (button === 3 && model.leftMouse)
+    ) {
+      // Block the switch to ZOOM if we are in the middle of an OBLIQUE crosshairs manipulation.
       if (
-        model.lastClickButton === button &&
-        model.lastClickTime !== null &&
-        time - model.lastClickTime < 400
+        model.interactionOperation !== InteractionOperations.MOVE_CROSSHAIRS
       ) {
-        isDoubleClick = true;
-        // Reset the click button and time.
-        model.lastClickButton = 0;
-        model.lastClickTime = null;
-      }
-      // Otherwise rememeber the click button and time.
-      else {
-        model.lastClickButton = button;
-        model.lastClickTime = time;
+        CustomZoom.onStart(publicAPI, model, callData);
       }
     }
-
-    // Process as a normal mouse down event.
-    publicAPI.customHandleMouse(callData, button, isDoubleClick);
-  }
-
-  const superHandleMouseMoveA = publicAPI.handleMouseMove;
-  publicAPI.handleMouseMove = callData => {
-    // Clear the double click detection if the mouse has moved.
-    model.lastClickButton = 0;
-    model.lastClickTime = null;
-    if (model.state === States.IS_WINDOW_LEVEL) {
-      // Process the mouse move.
-      publicAPI.customHandleMouse(callData, 0, false);
+    // Start window level change.
+    else if (button === 2) {
+      CustomWindowLevel.onStart(publicAPI, model, callData);
     }
-    if (superHandleMouseMoveA) {
-      superHandleMouseMoveA(callData);
+    // Start pan.
+    else if (button === 3 && !model.leftMouse) {
+      CustomPan.onStart(publicAPI, model, callData);
     }
-  };
-
-  /**
-   * Clear all mouse state information and stop the current interaction operation.
-   */
-  function clearMouseInteractionOperation(model) {
-    // Clear the interaction operation NONE.
-    model.interactionOperation = InteractionOperations.NONE;
-    // Release all buttons.
-    model.leftMouse = false;
-    model.middleMouse = false;
-    model.rightMouse = false;
-  }
-
-  const superHandleLeftButtonPress = publicAPI.handleLeftButtonPress;
-  publicAPI.handleLeftButtonPress = callData => {
-    model.leftMouse = true;
-    // console.log("handleLeftMousePress", callData);
-    // Move the crosshairs (no modifier keys down)
-    if (!callData.shiftKey && !callData.controlKey && !callData.altKey) {
-      publicAPI.startWindowLevel();
-      handleMouseButton(callData, 1);
-    } else if (superHandleLeftButtonPress) {
-      superHandleLeftButtonPress(callData);
-    }
-  };
-
-  publicAPI.superHandleLeftButtonRelease = publicAPI.handleLeftButtonRelease;
-  publicAPI.handleLeftButtonRelease = () => {
-    // Release all buttons and stop the current interaction operation.
-    clearMouseInteractionOperation(model);
-    // console.log("handleLeftMousRelease");
-    switch (model.state) {
-      case States.IS_WINDOW_LEVEL:
-        publicAPI.endWindowLevel();
-        break;
-
-      default:
-        publicAPI.superHandleLeftButtonRelease();
-        break;
-    }
-  };
-
-  const superHandleMiddleButtonPress = publicAPI.handleMiddleButtonPress;
-  publicAPI.handleMiddleButtonPress = callData => {
-    model.middleMouse = true;
-    // console.log("handleMiddleButtonPress", callData);
-    if (!callData.shiftKey && !callData.controlKey && !callData.altKey) {
-      publicAPI.startWindowLevel();
-      handleMouseButton(callData, 2);
-    } else if (superHandleMiddleButtonPress) {
-      superHandleMiddleButtonPress(callData);
-    }
-  };
-
-  publicAPI.superHandleMiddleButtonRelease =
-    publicAPI.handleMiddleButtonRelease;
-  publicAPI.handleMiddleButtonRelease = () => {
-    // Release all buttons and stop the current interaction operation.
-    clearMouseInteractionOperation(model);
-    // console.log("handleMiddleButtonRelease");
-    switch (model.state) {
-      case States.IS_WINDOW_LEVEL:
-        publicAPI.endWindowLevel();
-        break;
-
-      default:
-        publicAPI.superHandleMiddleButtonRelease();
-        break;
-    }
-  };
-
-  const superHandleRightButtonPress = publicAPI.handleRightButtonPress;
-  publicAPI.handleRightButtonPress = callData => {
-    model.rightMouse = true;
-    // console.log("handleRightButtonPress", callData);
-    if (!callData.shiftKey && !callData.controlKey && !callData.altKey) {
-      publicAPI.startWindowLevel();
-      handleMouseButton(callData, 3);
-    } else if (superHandleRightButtonPress) {
-      superHandleRightButtonPress(callData);
-    }
-  };
-
-  publicAPI.superHandleRightButtonRelease = publicAPI.handleRightButtonRelease;
-  publicAPI.handleRightButtonRelease = () => {
-    // Release all buttons and stop the current interaction operation.
-    clearMouseInteractionOperation(model);
-    // console.log("handleRightButtonRelease");
-    switch (model.state) {
-      case States.IS_WINDOW_LEVEL:
-        publicAPI.endWindowLevel();
-        break;
-
-      default:
-        publicAPI.superHandleRightButtonRelease();
-        break;
-    }
-  };
-
-  /**
-   * After a pan or zoom the crosshairs on that view need to be updated, this will re-render them in the correct spot.
-   */
-  publicAPI.updateCrosshairs = model => {
-    const { apis, apiIndex } = model;
-    const thisApi = apis[apiIndex];
-    const worldPos = thisApi.get('cachedCrosshairWorldPosition');
-    if (thisApi.svgWidgets && thisApi.svgWidgets.crosshairsWidget) {
-      thisApi.svgWidgets.crosshairsWidget.moveCrosshairs(
-        worldPos,
-        apis,
-        apiIndex
-      );
-    }
-    if (thisApi.svgWidgets && thisApi.svgWidgets.rotatableCrosshairsWidget) {
-      thisApi.svgWidgets.rotatableCrosshairsWidget.moveCrosshairs(
-        worldPos,
-        apis,
-        apiIndex
-      );
-    }
-  };
-
-  /**
-   * Get if the crosshair position is being changed; note rotating the crosshairs doesn't actually change it's position.
-   */
-  function movingCrosshairs() {
-    return (
-      model.operation &&
-      (model.operation.type === operations.MOVE_CROSSHAIRS ||
-        model.operation.type === operations.MOVE_REFERENCE_LINE)
-    );
-  }
-
-  /**
-   * Get the HU value of the volume at the current crosshair position and the crosshair position.
-   * { huValue: number, crosshairPos: [X, Y, Z] }
-   */
-  publicAPI.getCrosshairValues = () => {
-    try {
-      const { apis, apiIndex } = model;
-      const thisApi = apis[apiIndex];
-      const worldPos = thisApi.get('cachedCrosshairWorldPosition');
-      if (thisApi.volumes && worldPos) {
-        const mapper = thisApi.volumes[0].getVolumes().getMapper();
-        const inputData = mapper.getInputData();
-        const pointData = inputData.getPointData();
-        const scalarData = pointData.getScalars().getData();
-        const volumeDimensions = inputData.getDimensions();
-
-        // A simple function to round the number and clamp it to the min-max range.
-        const roundAndClamp = (num, min, max) => {
-          return num <= min ? min : num >= max ? max : Math.round(num);
-        };
-
-        // Convert the position from world space to the volume space.
-        let indexPos = [0, 0, 0];
-        inputData.worldToIndex(worldPos, indexPos);
-
-        // Round and clamp the position.
-        indexPos[0] = roundAndClamp(indexPos[0], 0, volumeDimensions[0]);
-        indexPos[1] = roundAndClamp(indexPos[1], 0, volumeDimensions[1]);
-        indexPos[2] = roundAndClamp(indexPos[2], 0, volumeDimensions[2]);
-
-        // Convert the volume position to a volume index.
-        const index =
-          indexPos[0] +
-          indexPos[1] * volumeDimensions[0] +
-          indexPos[2] * volumeDimensions[0] * volumeDimensions[1];
-        return {
-          huValue: scalarData[index],
-          crosshairPos: indexPos,
-        };
+    // Start move crosshairs or slice change.
+    else if (button === 1 && !model.rightMouse) {
+      // Start slice change.
+      if (model.interactionOperation === InteractionOperations.NONE) {
+        CustomSlice.onStart(publicAPI, model, callData);
       }
-    } catch (error) {
-      console.log('Error reading crosshairs value', error);
-      return 0;
+    }
+
+    // Perform the current interaction operation (if not InteractionOperations.NONE).
+    switch (model.interactionOperation) {
+      case InteractionOperations.ZOOM:
+        CustomZoom.onMove(publicAPI, model, callData);
+        break;
+      case InteractionOperations.PAN:
+        CustomPan.onMove(publicAPI, model, callData);
+        break;
+      case InteractionOperations.WINDOW_LEVEL:
+        CustomWindowLevel.onMove(publicAPI, model, callData);
+        break;
+      case InteractionOperations.SLICE:
+        CustomSlice.onMove(publicAPI, model, callData);
+        break;
+      default:
+        break;
     }
   };
 
@@ -1049,6 +891,13 @@ export function extend(publicAPI, model, initialValues = {}) {
     'lineGrabDistance',
     'disableNormalMPRScroll',
   ]);
+
+  // Initialize the manipulators.
+  CustomBase.initialize(publicAPI, model);
+  CustomZoom.initialize(publicAPI, model);
+  CustomPan.initialize(publicAPI, model);
+  CustomWindowLevel.initialize(publicAPI, model);
+  CustomSlice.initialize(publicAPI, model);
 
   // Object specific methods
   vtkInteractorStyleRotatableMPRCrosshairs(publicAPI, model);
