@@ -162,8 +162,6 @@ function addCustomInteractor(publicAPI, model) {
   // Remember our original mouse handlers.
   const originalHandleLeftButtonPress = publicAPI.handleLeftButtonPress;
   const originalHandleLeftButtonRelease = publicAPI.handleLeftButtonRelease;
-  const originalHandleRightButtonPress = publicAPI.handleRightButtonPress;
-  const originalHandleRightButtonRelease = publicAPI.handleRightButtonRelease;
 
   // Clear handlers so we don't chain them twice (once when this interactor calls it's super handler
   // and once when we call the original handler).
@@ -176,10 +174,6 @@ function addCustomInteractor(publicAPI, model) {
   // Get the newly set mouse handlers.
   const newHandleLeftButtonPress = publicAPI.handleLeftButtonPress;
   const newHandleLeftButtonRelease = publicAPI.handleLeftButtonRelease;
-
-  // Restore the original handlers for the methods we don't want to customize.
-  publicAPI.handleRightButtonPress = originalHandleRightButtonPress;
-  publicAPI.handleRightButtonRelease = originalHandleRightButtonRelease;
 
   // Set a custom handler for this method.
   publicAPI.handleLeftButtonPress = callData => {
