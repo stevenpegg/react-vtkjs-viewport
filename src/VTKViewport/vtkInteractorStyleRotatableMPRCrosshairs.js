@@ -886,7 +886,7 @@ function vtkInteractorStyleRotatableMPRCrosshairs(publicAPI, model) {
     }
 
     // Fire the callback if the crosshairs were moved.
-    if (isMovingCrosshairs() && model.onCrosshairsMoved) {
+    if (isMovingCrosshairs && model.onCrosshairsMoved) {
       model.onCrosshairsMoved();
     }
   };
