@@ -1028,40 +1028,51 @@ const DEFAULT_VALUES = {
   disableNormalMPRScroll: false,
   // Use the new customized controls?
   customControls: true,
-  // The current interaction operation.
-  interactionOperation: InteractionOperations.NONE,
-  // Mouse button states.
-  leftMouse: false, // Is the left mouse button currently down?
-  middleMouse: false, // Is the middle mouse button currently down?
-  rightMouse: false, // Is the right mouse button currently down?
-  lastClickButton: 0, // The last mouse button pressed.
-  lastClickTime: null, // The date the last button was pressed.
   // Optional callback for when the crosshairs are moved: () => void
   onCrosshairsMoved: undefined,
   // Optional callback for when the window levels have changed: () => void
   onWindowLevelsChanged: undefined,
-  // Optional callback for when a double mouse click event occurs: (button: number, apiIndex: number) => void
-  onDoubleClick: undefined,
+  // The double click callback: (button: number, apiIndex: number) => void
+  onDoubleClick: null,
+};
+
+// Don't override these values with initialValues, they are just used internally.
+const INTERNAL_VALUES = {
+  // Base data.
+  ...CustomBase.DEFAULT_VALUES,
+  // Zoom data.
+  ...CustomZoom.DEFAULT_VALUES,
+  // Pan data.
+  ...CustomPan.DEFAULT_VALUES,
+  // Level data.
+  ...CustomWindowLevel.DEFAULT_VALUES,
+  // Slice data.
+  ...CustomSlice.DEFAULT_VALUES,
 };
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(
+    model,
+    { ...DEFAULT_VALUES, ...INTERNAL_VALUES },
+    initialValues
+  );
 
   macro.setGet(publicAPI, model, [
     'callback',
     'apis',
     'apiIndex',
     'onScroll',
+    'onLevelsChanged',
+    'levelScale',
+    'flipDirection',
     'operation',
     'lineGrabDistance',
     'disableNormalMPRScroll',
   ]);
 
-  let customControls = true;
-
-  if (customControls) {
+  if (model.customControls) {
     addCustomInteractor(publicAPI, model);
     addCustomRotatableCrosshair(publicAPI, model);
   } else {
