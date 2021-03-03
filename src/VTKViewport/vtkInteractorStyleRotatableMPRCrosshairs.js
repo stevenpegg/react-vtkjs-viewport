@@ -163,20 +163,26 @@ function addCustomInteractor(publicAPI, model) {
 
   // Remember our original mouse handlers.
   const originalHandleLeftButtonPress = publicAPI.handleLeftButtonPress;
+  const originalHandleLeftButtonRelease = publicAPI.handleLeftButtonRelease;
   const originalHandleMiddleButtonPress = publicAPI.handleMiddleButtonPress;
   const originalHandleMiddleButtonRelease = publicAPI.handleMiddleButtonRelease;
   const originalHandleRightButtonPress = publicAPI.handleRightButtonPress;
   const originalHandleRightButtonRelease = publicAPI.handleRightButtonRelease;
+  const originalHandleMouseMove = publicAPI.handleMouseMove;
 
   // Clear handlers so we don't chain them twice (once when this interactor calls it's super handler
   // and once when we call the original handler).
   publicAPI.handleLeftButtonPress = null;
+  publicAPI.handleLeftButtonRelease = null;
+  publicAPI.handleMouseMove = null;
 
   // Object specific methods
   vtkInteractorStyleRotatableMPRCrosshairs(publicAPI, model);
 
   // Get the newly set mouse handlers.
   const newHandleLeftButtonPress = publicAPI.handleLeftButtonPress;
+  const newHandleLeftButtonRelease = publicAPI.handleLeftButtonRelease;
+  const newHandleMouseMove = publicAPI.handleMouseMove;
 
   // Restore the original handlers for the methods we don't want to customize.
   publicAPI.handleMiddleButtonPress = originalHandleMiddleButtonPress;
@@ -196,7 +202,7 @@ function addCustomInteractor(publicAPI, model) {
       model.operation = { type: operations.MOVE_CROSSHAIRS };
       publicAPI.startWindowLevel();
       // Use the handleMouseMove function to move the crosshairs.
-      publicAPI.handleMouseMove(callData);
+      newHandleMouseMove(callData);
     }
     // Otherwise do the default handling of the click.
     else {
@@ -213,6 +219,19 @@ function addCustomInteractor(publicAPI, model) {
     } else {
       originalHandleLeftButtonPress(callData);
     }
+  };
+
+  // Set a custom handler for this method.
+  publicAPI.handleLeftButtonRelease = callData => {
+    newHandleLeftButtonRelease(callData);
+    originalHandleLeftButtonRelease(callData);
+  };
+
+  // Set a custom handler for this method.
+  publicAPI.handleMouseMove = callData => {
+    // const isMovingCrosshairs = publicAPI.movingCrosshairs();
+    newHandleMouseMove(callData);
+    originalHandleMouseMove(callData);
   };
 }
 

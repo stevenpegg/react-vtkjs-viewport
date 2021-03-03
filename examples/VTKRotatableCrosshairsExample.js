@@ -123,6 +123,15 @@ class VTKRotatableCrosshairsExample extends Component {
 
       const istyle = vtkInteractorStyleRotatableMPRCrosshairs.newInstance({
         customControls: true,
+        onCrosshairsMoved: () => {
+          console.log('onCrosshairsMoved');
+        },
+        onWindowLevelsChanged: () => {
+          console.log('onWindowLevelChanged');
+        },
+        onDoubleClick: (button, viewIndex) => {
+          console.log('onDoubleClick', button, viewIndex);
+        },
       });
 
       // add istyle
