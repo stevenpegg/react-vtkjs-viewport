@@ -13,7 +13,7 @@ import CustomSlice from './Manipulators/customSlice';
 
 const { States } = Constants;
 
-const operations = {
+export const operations = {
   ROTATE_CROSSHAIRS: 0,
   MOVE_CROSSHAIRS: 1,
   MOVE_REFERENCE_LINE: 2,
@@ -81,7 +81,7 @@ function addCustomInteractor(publicAPI, model) {
         };
       }
     } catch (error) {
-      console.log('Error reading crosshairs value', error);
+      // console.log('Error reading crosshairs value', error);
       return 0;
     }
   };
@@ -93,6 +93,11 @@ function addCustomInteractor(publicAPI, model) {
    * the same mouse button is being clicked a second time in quick succession.
    */
   publicAPI.customHandleMouse = (callData, button, isDoubleClick) => {
+    // Block all custom interactions if the crosshair is being adjusted.
+    if (model.operation && model.operation.type !== null) {
+      return;
+    }
+
     // Fire the onDoubleClick callback?
     if (isDoubleClick && model.onDoubleClick) {
       model.onDoubleClick(button, model.apiIndex);
@@ -104,10 +109,7 @@ function addCustomInteractor(publicAPI, model) {
       (button === 1 && model.rightMouse) ||
       (button === 3 && model.leftMouse)
     ) {
-      // Block the switch to ZOOM if we are manipulating the crosshairs.
-      if (!model.operation || model.operation.type === null) {
-        CustomZoom.onStart(publicAPI, model, callData);
-      }
+      CustomZoom.onStart(publicAPI, model, callData);
     }
     // Start window level change.
     else if (button === 2) {
@@ -117,9 +119,8 @@ function addCustomInteractor(publicAPI, model) {
     else if (button === 3 && !model.leftMouse) {
       CustomPan.onStart(publicAPI, model, callData);
     }
-    // Start move crosshairs or slice change.
+    // Start slice change.
     else if (button === 1 && !model.rightMouse) {
-      // Start slice change.
       if (model.interactionOperation === InteractionOperations.NONE) {
         CustomSlice.onStart(publicAPI, model, callData);
       }
@@ -159,55 +160,11 @@ function addCustomInteractor(publicAPI, model) {
   CustomWindowLevel.initialize(publicAPI, model);
   CustomSlice.initialize(publicAPI, model);
 
-  // Remember our original mouse handlers.
-  const originalHandleLeftButtonPress = publicAPI.handleLeftButtonPress;
-
-  // Clear handlers so we don't chain them twice (once when this interactor calls it's super handler
-  // and once when we call the original handler).
-  publicAPI.handleLeftButtonPress = null;
-
   // Object specific methods
   vtkInteractorStyleRotatableMPRCrosshairs(publicAPI, model);
 
   // Finalize the custom manipulators.
   CustomBase.finalize(publicAPI, model);
-
-  // Get the newly set mouse handlers.
-  const newHandleLeftButtonPress = publicAPI.handleLeftButtonPress;
-
-  // Set a custom handler for this method.
-  publicAPI.handleLeftButtonPress = callData => {
-    // A left click with the shift button down will initiate a move crosshair operation
-    // ... even if the click is outside the crosshairs center.
-    if (
-      (!model.operation || model.operation.type === null) &&
-      callData.shiftKey
-    ) {
-      // Manually start the MOVE_CROSSHAIRS operation.
-      model.operation = { type: operations.MOVE_CROSSHAIRS };
-      publicAPI.startWindowLevel();
-      // Use the handleMouseMove function to move the crosshairs.
-      publicAPI.handleMouseMove(callData);
-    }
-    // Otherwise do the default handling of the click.
-    else {
-      newHandleLeftButtonPress(callData);
-    }
-
-    // If the user is adjusting the crosshairs block set it as an interaction operation.
-    if (model.operation && model.operation.type !== null) {
-      // We still need to record that the left button is down.
-      model.leftMouse = true;
-      model.interactionOperation = InteractionOperations.MOVE_CROSSHAIRS;
-      // Fire the callback if the crosshairs were moved.
-      if (publicAPI.movingCrosshairs() && model.onCrosshairsMoved) {
-        model.onCrosshairsMoved();
-      }
-      // We still need to record the change in the mouse button.
-    } else {
-      originalHandleLeftButtonPress(callData);
-    }
-  };
 }
 
 function vtkInteractorStyleRotatableMPRCrosshairs(publicAPI, model) {
@@ -620,6 +577,10 @@ function vtkInteractorStyleRotatableMPRCrosshairs(publicAPI, model) {
     );
 
     publicAPI.invokeInteractionEvent({ type: 'InteractionEvent' });
+    // Fire the callback if it exists.
+    if (model.onCrosshairsMoved) {
+      model.onCrosshairsMoved();
+    }
   }
 
   function scrollCrosshairs(lineIndex, direction) {
@@ -866,9 +827,6 @@ function vtkInteractorStyleRotatableMPRCrosshairs(publicAPI, model) {
 
   const superHandleMouseMove = publicAPI.handleMouseMove;
   publicAPI.handleMouseMove = callData => {
-    // Remember if the crosshairs were being moved.
-    const isMovingCrosshairs = publicAPI.movingCrosshairs();
-
     if (model.state === States.IS_WINDOW_LEVEL) {
       performOperation(callData);
     } else {
@@ -877,11 +835,6 @@ function vtkInteractorStyleRotatableMPRCrosshairs(publicAPI, model) {
 
     if (superHandleMouseMove) {
       superHandleMouseMove(callData);
-    }
-
-    // Fire the callback if the crosshairs were moved.
-    if (isMovingCrosshairs && model.onCrosshairsMoved) {
-      model.onCrosshairsMoved();
     }
   };
 
@@ -896,16 +849,7 @@ function vtkInteractorStyleRotatableMPRCrosshairs(publicAPI, model) {
   };
 
   publicAPI.superHandleLeftButtonRelease = publicAPI.handleLeftButtonRelease;
-  /*
-  // Fixes a requirement for publicAPI.superHandleLeftButtonRelease to exist here and elsewhere.
-  if (!publicAPI.superHandleLeftButtonRelease) {
-    publicAPI.superHandleLeftButtonRelease = () => {};
-  }
-  */
   publicAPI.handleLeftButtonRelease = callData => {
-    // Remember if the crosshairs were being moved.
-    const isMovingCrosshairs = publicAPI.movingCrosshairs();
-
     switch (model.state) {
       case States.IS_WINDOW_LEVEL:
         mouseUp(callData);
@@ -914,11 +858,6 @@ function vtkInteractorStyleRotatableMPRCrosshairs(publicAPI, model) {
       default:
         publicAPI.superHandleLeftButtonRelease();
         break;
-    }
-
-    // Fire the callback if the crosshairs were moved.
-    if (isMovingCrosshairs && model.onCrosshairsMoved) {
-      model.onCrosshairsMoved();
     }
   };
 
