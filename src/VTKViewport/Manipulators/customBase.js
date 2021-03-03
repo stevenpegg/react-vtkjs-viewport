@@ -111,41 +111,8 @@ function initialize(publicAPI, model) {
     }
   };
 
-  publicAPI.superHandleMiddleButtonRelease =
-    publicAPI.handleMiddleButtonRelease;
-  publicAPI.handleMiddleButtonRelease = () => {
-    // Release all buttons and stop the current interaction operation.
-    publicAPI.clearMouseInteractionOperation(model);
-    console.log('handleMiddleButtonRelease');
-    switch (model.state) {
-      case States.IS_WINDOW_LEVEL:
-        publicAPI.endWindowLevel();
-        break;
-
-      default:
-        publicAPI.superHandleMiddleButtonRelease();
-        break;
-    }
-  };
-
-  publicAPI.superHandleRightButtonRelease = publicAPI.handleRightButtonRelease;
-  publicAPI.handleRightButtonRelease = () => {
-    // Release all buttons and stop the current interaction operation.
-    publicAPI.clearMouseInteractionOperation(model);
-    console.log('handleRightButtonRelease');
-    switch (model.state) {
-      case States.IS_WINDOW_LEVEL:
-        publicAPI.endWindowLevel();
-        break;
-
-      default:
-        publicAPI.superHandleRightButtonRelease();
-        break;
-    }
-  };
-
   /**
-   * After a pan or zoom the crosshairs on that view need to be updated, this will re-render them in the correct spot.
+   * After a pan or zoom the crosshairs on that view need to be updated, call this is re-render them in the correct spot.
    */
   publicAPI.updateCrosshairs = model => {
     const { apis, apiIndex } = model;
@@ -187,6 +154,39 @@ function finalize(publicAPI, model) {
         publicAPI.endWindowLevel();
         break;
       default:
+        break;
+    }
+  };
+
+  publicAPI.superHandleMiddleButtonRelease =
+    publicAPI.handleMiddleButtonRelease;
+  publicAPI.handleMiddleButtonRelease = () => {
+    // Release all buttons and stop the current interaction operation.
+    publicAPI.clearMouseInteractionOperation(model);
+    console.log('handleMiddleButtonRelease');
+    switch (model.state) {
+      case States.IS_WINDOW_LEVEL:
+        publicAPI.endWindowLevel();
+        break;
+
+      default:
+        publicAPI.superHandleMiddleButtonRelease();
+        break;
+    }
+  };
+
+  publicAPI.superHandleRightButtonRelease = publicAPI.handleRightButtonRelease;
+  publicAPI.handleRightButtonRelease = () => {
+    // Release all buttons and stop the current interaction operation.
+    publicAPI.clearMouseInteractionOperation(model);
+    console.log('handleRightButtonRelease');
+    switch (model.state) {
+      case States.IS_WINDOW_LEVEL:
+        publicAPI.endWindowLevel();
+        break;
+
+      default:
+        publicAPI.superHandleRightButtonRelease();
         break;
     }
   };
