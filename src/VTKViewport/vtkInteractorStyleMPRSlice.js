@@ -398,6 +398,11 @@ function vtkInteractorStyleMPRSlice(publicAPI, model) {
         slicePoint,
       });
     }
+
+    // Fire the callback after the crosshairs are moved.
+    if (model.onCrosshairsMoved) {
+      model.onCrosshairsMoved();
+    }
   };
 
   model.onScroll = () => {

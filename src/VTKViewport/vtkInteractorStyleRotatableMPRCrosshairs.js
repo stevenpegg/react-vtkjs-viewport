@@ -29,13 +29,62 @@ const operations = {
 // ----------------------------------------------------------------------------
 
 function addCustomInteractor(publicAPI, model) {
-  // Inherit from the slice interactor to enable the scroll wheel to change the slice value.
-  vtkInteractorStyleMPRSlice.extend(publicAPI, model, {
-    addMouseTrackballManipulator: false,
-    addMousePanManipulator: false,
-    addMouseZoomManipulator: false,
-    addMouseScrollManipulator: true,
-  });
+  /**
+   * Get if the crosshair position is being changed; note rotating the crosshairs doesn't actually change it's position.
+   */
+  publicAPI.movingCrosshairs = () => {
+    return (
+      model.operation &&
+      (model.operation.type === operations.MOVE_CROSSHAIRS ||
+        model.operation.type === operations.MOVE_REFERENCE_LINE)
+    );
+  };
+
+  /**
+   * Get the HU value of the volume at the current crosshair position and the crosshair position.
+   * { huValue: number, crosshairPos: [X, Y, Z] }
+   */
+  publicAPI.getCrosshairValues = () => {
+    try {
+      const { apis, apiIndex } = model;
+      const thisApi = apis[apiIndex];
+      const worldPos = thisApi.get('cachedCrosshairWorldPosition');
+      if (thisApi.volumes && worldPos) {
+        const mapper = thisApi.volumes[0].getVolumes().getMapper();
+        const inputData = mapper.getInputData();
+        const pointData = inputData.getPointData();
+        const scalarData = pointData.getScalars().getData();
+        const volumeDimensions = inputData.getDimensions();
+
+        // A simple function to round the number and clamp it to the min-max range.
+        const roundAndClamp = (num, min, max) => {
+          return num <= min ? min : num >= max ? max : Math.round(num);
+        };
+
+        // Convert the position from world space to the volume space.
+        let indexPos = [0, 0, 0];
+        inputData.worldToIndex(worldPos, indexPos);
+
+        // Round and clamp the position.
+        indexPos[0] = roundAndClamp(indexPos[0], 0, volumeDimensions[0]);
+        indexPos[1] = roundAndClamp(indexPos[1], 0, volumeDimensions[1]);
+        indexPos[2] = roundAndClamp(indexPos[2], 0, volumeDimensions[2]);
+
+        // Convert the volume position to a volume index.
+        const index =
+          indexPos[0] +
+          indexPos[1] * volumeDimensions[0] +
+          indexPos[2] * volumeDimensions[0] * volumeDimensions[1];
+        return {
+          huValue: scalarData[index],
+          crosshairPos: indexPos,
+        };
+      }
+    } catch (error) {
+      console.log('Error reading crosshairs value', error);
+      return 0;
+    }
+  };
 
   /**
    * Our custom handler for mouse interactions. This is called when a button is first pressed
@@ -97,6 +146,14 @@ function addCustomInteractor(publicAPI, model) {
     }
   };
 
+  // Inherit from the slice interactor to enable the scroll wheel to change the slice value.
+  vtkInteractorStyleMPRSlice.extend(publicAPI, model, {
+    addMouseTrackballManipulator: false,
+    addMousePanManipulator: false,
+    addMouseZoomManipulator: false,
+    addMouseScrollManipulator: true,
+  });
+
   // Initialize the manipulators.
   CustomBase.initialize(publicAPI, model);
   CustomZoom.initialize(publicAPI, model);
@@ -106,90 +163,26 @@ function addCustomInteractor(publicAPI, model) {
 
   // Remember our original mouse handlers.
   const originalHandleLeftButtonPress = publicAPI.handleLeftButtonPress;
-  const originalHandleLeftButtonRelease = publicAPI.handleLeftButtonRelease;
   const originalHandleMiddleButtonPress = publicAPI.handleMiddleButtonPress;
   const originalHandleMiddleButtonRelease = publicAPI.handleMiddleButtonRelease;
   const originalHandleRightButtonPress = publicAPI.handleRightButtonPress;
   const originalHandleRightButtonRelease = publicAPI.handleRightButtonRelease;
-  const originalHandleMouseMove = publicAPI.handleMouseMove;
-  const originalScrollToSlice = publicAPI.scrollToSlice;
 
   // Clear handlers so we don't chain them twice (once when this interactor calls it's super handler
   // and once when we call the original handler).
   publicAPI.handleLeftButtonPress = null;
-  publicAPI.handleLeftButtonRelease = null;
-  publicAPI.handleMouseMove = null;
 
   // Object specific methods
   vtkInteractorStyleRotatableMPRCrosshairs(publicAPI, model);
 
   // Get the newly set mouse handlers.
   const newHandleLeftButtonPress = publicAPI.handleLeftButtonPress;
-  const newHandleLeftButtonRelease = publicAPI.handleLeftButtonRelease;
-  const newHandleMouseMove = publicAPI.handleMouseMove;
 
   // Restore the original handlers for the methods we don't want to customize.
   publicAPI.handleMiddleButtonPress = originalHandleMiddleButtonPress;
   publicAPI.handleMiddleButtonRelease = originalHandleMiddleButtonRelease;
   publicAPI.handleRightButtonPress = originalHandleRightButtonPress;
   publicAPI.handleRightButtonRelease = originalHandleRightButtonRelease;
-
-  /**
-   * Get if the crosshair position is being changed; note rotating the crosshairs doesn't actually change it's position.
-   */
-  const movingCrosshairs = () => {
-    return (
-      model.operation &&
-      (model.operation.type === operations.MOVE_CROSSHAIRS ||
-        model.operation.type === operations.MOVE_REFERENCE_LINE)
-    );
-  };
-
-  /**
-   * Get the HU value of the volume at the current crosshair position and the crosshair position.
-   * { huValue: number, crosshairPos: [X, Y, Z] }
-   */
-  publicAPI.getCrosshairValues = () => {
-    try {
-      const { apis, apiIndex } = model;
-      const thisApi = apis[apiIndex];
-      const worldPos = thisApi.get('cachedCrosshairWorldPosition');
-      if (thisApi.volumes && worldPos) {
-        const mapper = thisApi.volumes[0].getVolumes().getMapper();
-        const inputData = mapper.getInputData();
-        const pointData = inputData.getPointData();
-        const scalarData = pointData.getScalars().getData();
-        const volumeDimensions = inputData.getDimensions();
-
-        // A simple function to round the number and clamp it to the min-max range.
-        const roundAndClamp = (num, min, max) => {
-          return num <= min ? min : num >= max ? max : Math.round(num);
-        };
-
-        // Convert the position from world space to the volume space.
-        let indexPos = [0, 0, 0];
-        inputData.worldToIndex(worldPos, indexPos);
-
-        // Round and clamp the position.
-        indexPos[0] = roundAndClamp(indexPos[0], 0, volumeDimensions[0]);
-        indexPos[1] = roundAndClamp(indexPos[1], 0, volumeDimensions[1]);
-        indexPos[2] = roundAndClamp(indexPos[2], 0, volumeDimensions[2]);
-
-        // Convert the volume position to a volume index.
-        const index =
-          indexPos[0] +
-          indexPos[1] * volumeDimensions[0] +
-          indexPos[2] * volumeDimensions[0] * volumeDimensions[1];
-        return {
-          huValue: scalarData[index],
-          crosshairPos: indexPos,
-        };
-      }
-    } catch (error) {
-      console.log('Error reading crosshairs value', error);
-      return 0;
-    }
-  };
 
   // Set a custom handler for this method.
   publicAPI.handleLeftButtonPress = callData => {
@@ -203,7 +196,7 @@ function addCustomInteractor(publicAPI, model) {
       model.operation = { type: operations.MOVE_CROSSHAIRS };
       publicAPI.startWindowLevel();
       // Use the handleMouseMove function to move the crosshairs.
-      newHandleMouseMove(callData);
+      publicAPI.handleMouseMove(callData);
     }
     // Otherwise do the default handling of the click.
     else {
@@ -214,42 +207,11 @@ function addCustomInteractor(publicAPI, model) {
     if (model.operation && model.operation.type !== null) {
       model.interactionOperation = InteractionOperations.MOVE_CROSSHAIRS;
       // Fire the callback if the crosshairs were moved.
-      if (movingCrosshairs() && model.onCrosshairsMoved) {
+      if (publicAPI.movingCrosshairs() && model.onCrosshairsMoved) {
         model.onCrosshairsMoved();
       }
     } else {
       originalHandleLeftButtonPress(callData);
-    }
-  };
-
-  // Set a custom handler for this method.
-  publicAPI.handleLeftButtonRelease = callData => {
-    const isMovingCrosshairs = movingCrosshairs();
-    newHandleLeftButtonRelease(callData);
-    originalHandleLeftButtonRelease(callData);
-    // Fire the callback if the crosshairs were moved.
-    if (isMovingCrosshairs && model.onCrosshairsMoved) {
-      model.onCrosshairsMoved();
-    }
-  };
-
-  // Set a custom handler for this method.
-  publicAPI.handleMouseMove = callData => {
-    const isMovingCrosshairs = movingCrosshairs();
-    newHandleMouseMove(callData);
-    originalHandleMouseMove(callData);
-    // Fire the callback if the crosshairs were moved.
-    if (isMovingCrosshairs && model.onCrosshairsMoved) {
-      model.onCrosshairsMoved();
-    }
-  };
-
-  // Override the scrollToSlice method so we can fire our callback after the change.
-  publicAPI.scrollToSlice = slice => {
-    originalScrollToSlice(slice);
-    // Fire the callback after the crosshairs are moved.
-    if (model.onCrosshairsMoved) {
-      model.onCrosshairsMoved();
     }
   };
 }
@@ -910,6 +872,9 @@ function vtkInteractorStyleRotatableMPRCrosshairs(publicAPI, model) {
 
   const superHandleMouseMove = publicAPI.handleMouseMove;
   publicAPI.handleMouseMove = callData => {
+    // Remember if the crosshairs were being moved.
+    const isMovingCrosshairs = publicAPI.movingCrosshairs();
+
     if (model.state === States.IS_WINDOW_LEVEL) {
       performOperation(callData);
     } else {
@@ -918,6 +883,11 @@ function vtkInteractorStyleRotatableMPRCrosshairs(publicAPI, model) {
 
     if (superHandleMouseMove) {
       superHandleMouseMove(callData);
+    }
+
+    // Fire the callback if the crosshairs were moved.
+    if (isMovingCrosshairs() && model.onCrosshairsMoved) {
+      model.onCrosshairsMoved();
     }
   };
 
@@ -937,6 +907,9 @@ function vtkInteractorStyleRotatableMPRCrosshairs(publicAPI, model) {
     publicAPI.superHandleLeftButtonRelease = () => {};
   }
   publicAPI.handleLeftButtonRelease = callData => {
+    // Remember if the crosshairs were being moved.
+    const isMovingCrosshairs = publicAPI.movingCrosshairs();
+
     switch (model.state) {
       case States.IS_WINDOW_LEVEL:
         mouseUp(callData);
@@ -945,6 +918,11 @@ function vtkInteractorStyleRotatableMPRCrosshairs(publicAPI, model) {
       default:
         publicAPI.superHandleLeftButtonRelease();
         break;
+    }
+
+    // Fire the callback if the crosshairs were moved.
+    if (isMovingCrosshairs && model.onCrosshairsMoved) {
+      model.onCrosshairsMoved();
     }
   };
 
