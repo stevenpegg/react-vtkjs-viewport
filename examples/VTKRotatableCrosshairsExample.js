@@ -121,7 +121,9 @@ class VTKRotatableCrosshairsExample extends Component {
         'rotatableCrosshairsWidget'
       );
 
-      const istyle = vtkInteractorStyleRotatableMPRCrosshairs.newInstance();
+      const istyle = vtkInteractorStyleRotatableMPRCrosshairs.newInstance({
+        customControls: true,
+      });
 
       // add istyle
       api.setInteractorStyle({

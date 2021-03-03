@@ -5,22 +5,13 @@ import vtkCoordinate from 'vtk.js/Sources/Rendering/Core/Coordinate';
 import vtkMatrixBuilder from 'vtk.js/Sources/Common/Core/MatrixBuilder';
 import { vec2, vec3, quat } from 'gl-matrix';
 import vtkMath from 'vtk.js/Sources/Common/Core/Math';
-import CustomBase from './Manipulators/customBase';
+import CustomBase, { InteractionOperations } from './Manipulators/customBase';
 import CustomZoom from './Manipulators/customZoom';
 import CustomPan from './Manipulators/customPan';
 import CustomWindowLevel from './Manipulators/customWindowLevel';
 import CustomSlice from './Manipulators/customSlice';
 
 const { States } = Constants;
-
-export const InteractionOperations = {
-  NONE: 0,
-  MOVE_CROSSHAIRS: 1,
-  PAN: 2,
-  ZOOM: 3,
-  WINDOW_LEVEL: 4,
-  SLICE: 5,
-};
 
 const operations = {
   ROTATE_CROSSHAIRS: 0,
@@ -112,9 +103,7 @@ function addCustomInteractor(publicAPI, model) {
   CustomPan.initialize(publicAPI, model);
   CustomWindowLevel.initialize(publicAPI, model);
   CustomSlice.initialize(publicAPI, model);
-}
 
-function addCustomRotatableCrosshair(publicAPI, model) {
   // Remember our original mouse handlers.
   const originalHandleLeftButtonPress = publicAPI.handleLeftButtonPress;
   const originalHandleLeftButtonRelease = publicAPI.handleLeftButtonRelease;
@@ -943,6 +932,10 @@ function vtkInteractorStyleRotatableMPRCrosshairs(publicAPI, model) {
   };
 
   publicAPI.superHandleLeftButtonRelease = publicAPI.handleLeftButtonRelease;
+  // Fixes a requirement for publicAPI.superHandleLeftButtonRelease to exist here and elsewhere.
+  if (!publicAPI.superHandleLeftButtonRelease) {
+    publicAPI.superHandleLeftButtonRelease = () => {};
+  }
   publicAPI.handleLeftButtonRelease = callData => {
     switch (model.state) {
       case States.IS_WINDOW_LEVEL:
@@ -1027,7 +1020,7 @@ const DEFAULT_VALUES = {
   lineGrabDistance: 20,
   disableNormalMPRScroll: false,
   // Use the new customized controls?
-  customControls: true,
+  customControls: false,
   // Optional callback for when the crosshairs are moved: () => void
   onCrosshairsMoved: undefined,
   // Optional callback for when the window levels have changed: () => void
@@ -1074,7 +1067,6 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   if (model.customControls) {
     addCustomInteractor(publicAPI, model);
-    addCustomRotatableCrosshair(publicAPI, model);
   } else {
     // Inheritance
     vtkInteractorStyleMPRSlice.extend(publicAPI, model, initialValues);

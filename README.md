@@ -19,6 +19,9 @@
 **addMouseScrollManipulator: bool**
 * **vtkInteractorStyleRotatableMPRCrosshairs** has a new model value **extendVtkInteractorStyleMPRSlice: bool** that lets you not extend the slice manipulator.
 
+Before pushing any changes to master ensure you have updated the list directory by running:
+npm run build
+
 ## Install
 
 This project consumes `vtk.js` as an ES6 dependency.
