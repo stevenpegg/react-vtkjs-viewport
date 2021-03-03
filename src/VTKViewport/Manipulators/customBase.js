@@ -76,7 +76,7 @@ function initialize(publicAPI, model) {
   const superHandleLeftButtonPress = publicAPI.handleLeftButtonPress;
   publicAPI.handleLeftButtonPress = callData => {
     model.leftMouse = true;
-    // console.log("handleLeftMousePress", callData);
+    console.log('handleLeftButtonPress', callData);
     // Move the crosshairs (no modifier keys down)
     if (!callData.shiftKey && !callData.controlKey && !callData.altKey) {
       publicAPI.startWindowLevel();
@@ -90,7 +90,7 @@ function initialize(publicAPI, model) {
   publicAPI.handleLeftButtonRelease = () => {
     // Release all buttons and stop the current interaction operation.
     clearMouseInteractionOperation(model);
-    // console.log("handleLeftMousRelease");
+    console.log('handleLeftButtonRelease');
     switch (model.state) {
       case States.IS_WINDOW_LEVEL:
         publicAPI.endWindowLevel();
@@ -105,7 +105,7 @@ function initialize(publicAPI, model) {
   const superHandleMiddleButtonPress = publicAPI.handleMiddleButtonPress;
   publicAPI.handleMiddleButtonPress = callData => {
     model.middleMouse = true;
-    // console.log("handleMiddleButtonPress", callData);
+    console.log('handleMiddleButtonPress', callData);
     if (!callData.shiftKey && !callData.controlKey && !callData.altKey) {
       publicAPI.startWindowLevel();
       handleMouseButton(callData, 2);
@@ -119,7 +119,7 @@ function initialize(publicAPI, model) {
   publicAPI.handleMiddleButtonRelease = () => {
     // Release all buttons and stop the current interaction operation.
     clearMouseInteractionOperation(model);
-    // console.log("handleMiddleButtonRelease");
+    console.log('handleMiddleButtonRelease');
     switch (model.state) {
       case States.IS_WINDOW_LEVEL:
         publicAPI.endWindowLevel();
@@ -134,7 +134,7 @@ function initialize(publicAPI, model) {
   const superHandleRightButtonPress = publicAPI.handleRightButtonPress;
   publicAPI.handleRightButtonPress = callData => {
     model.rightMouse = true;
-    // console.log("handleRightButtonPress", callData);
+    console.log('handleRightButtonPress', callData);
     if (!callData.shiftKey && !callData.controlKey && !callData.altKey) {
       publicAPI.startWindowLevel();
       handleMouseButton(callData, 3);
@@ -147,7 +147,7 @@ function initialize(publicAPI, model) {
   publicAPI.handleRightButtonRelease = () => {
     // Release all buttons and stop the current interaction operation.
     clearMouseInteractionOperation(model);
-    // console.log("handleRightButtonRelease");
+    console.log('handleRightButtonRelease');
     switch (model.state) {
       case States.IS_WINDOW_LEVEL:
         publicAPI.endWindowLevel();

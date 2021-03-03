@@ -104,10 +104,8 @@ function addCustomInteractor(publicAPI, model) {
       (button === 1 && model.rightMouse) ||
       (button === 3 && model.leftMouse)
     ) {
-      // Block the switch to ZOOM if we are in the middle of an OBLIQUE crosshairs manipulation.
-      if (
-        model.interactionOperation !== InteractionOperations.MOVE_CROSSHAIRS
-      ) {
+      // Block the switch to ZOOM if we are manipulating the crosshairs.
+      if (!model.operation || model.operation.type === null) {
         CustomZoom.onStart(publicAPI, model, callData);
       }
     }
@@ -164,8 +162,6 @@ function addCustomInteractor(publicAPI, model) {
   // Remember our original mouse handlers.
   const originalHandleLeftButtonPress = publicAPI.handleLeftButtonPress;
   const originalHandleLeftButtonRelease = publicAPI.handleLeftButtonRelease;
-  const originalHandleMiddleButtonPress = publicAPI.handleMiddleButtonPress;
-  const originalHandleMiddleButtonRelease = publicAPI.handleMiddleButtonRelease;
   const originalHandleRightButtonPress = publicAPI.handleRightButtonPress;
   const originalHandleRightButtonRelease = publicAPI.handleRightButtonRelease;
 
@@ -182,8 +178,6 @@ function addCustomInteractor(publicAPI, model) {
   const newHandleLeftButtonRelease = publicAPI.handleLeftButtonRelease;
 
   // Restore the original handlers for the methods we don't want to customize.
-  publicAPI.handleMiddleButtonPress = originalHandleMiddleButtonPress;
-  publicAPI.handleMiddleButtonRelease = originalHandleMiddleButtonRelease;
   publicAPI.handleRightButtonPress = originalHandleRightButtonPress;
   publicAPI.handleRightButtonRelease = originalHandleRightButtonRelease;
 
@@ -208,11 +202,14 @@ function addCustomInteractor(publicAPI, model) {
 
     // If the user is adjusting the crosshairs block set it as an interaction operation.
     if (model.operation && model.operation.type !== null) {
+      // We still need to record that the left button is down.
+      model.leftMouse = true;
       model.interactionOperation = InteractionOperations.MOVE_CROSSHAIRS;
       // Fire the callback if the crosshairs were moved.
       if (publicAPI.movingCrosshairs() && model.onCrosshairsMoved) {
         model.onCrosshairsMoved();
       }
+      // We still need to record the change in the mouse button.
     } else {
       originalHandleLeftButtonPress(callData);
     }

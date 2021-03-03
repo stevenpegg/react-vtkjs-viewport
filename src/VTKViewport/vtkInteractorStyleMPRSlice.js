@@ -50,22 +50,29 @@ function vtkInteractorStyleMPRSlice(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkInteractorStyleMPRSlice');
 
-  model.trackballManipulator = vtkMouseCameraTrackballRotateManipulator.newInstance(
-    {
-      button: 1,
-    }
-  );
-  model.panManipulator = vtkMouseCameraTrackballPanManipulator.newInstance({
-    button: 2,
-  });
-  model.zoomManipulator = vtkMouseCameraTrackballZoomManipulator.newInstance({
-    button: 3,
-  });
-
-  model.scrollManipulator = vtkMouseRangeManipulator.newInstance({
-    scrollEnabled: true,
-    dragEnabled: false,
-  });
+  if (model.addMouseTrackballManipulator) {
+    model.trackballManipulator = vtkMouseCameraTrackballRotateManipulator.newInstance(
+      {
+        button: 1,
+      }
+    );
+  }
+  if (model.addMousePanManipulator) {
+    model.panManipulator = vtkMouseCameraTrackballPanManipulator.newInstance({
+      button: 2,
+    });
+  }
+  if (model.addMouseZoomManipulator) {
+    model.zoomManipulator = vtkMouseCameraTrackballZoomManipulator.newInstance({
+      button: 3,
+    });
+  }
+  if (model.addMouseScrollManipulator) {
+    model.scrollManipulator = vtkMouseRangeManipulator.newInstance({
+      scrollEnabled: true,
+      dragEnabled: false,
+    });
+  }
 
   // cache for sliceRange
   const cache = {
