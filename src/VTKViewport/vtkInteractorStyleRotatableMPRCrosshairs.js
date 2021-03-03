@@ -152,7 +152,7 @@ function addCustomInteractor(publicAPI, model) {
     addMouseScrollManipulator: true,
   });
 
-  // Initialize the manipulators.
+  // Initialize the custom manipulators.
   CustomBase.initialize(publicAPI, model);
   CustomZoom.initialize(publicAPI, model);
   CustomPan.initialize(publicAPI, model);
@@ -161,19 +161,19 @@ function addCustomInteractor(publicAPI, model) {
 
   // Remember our original mouse handlers.
   const originalHandleLeftButtonPress = publicAPI.handleLeftButtonPress;
-  const originalHandleLeftButtonRelease = publicAPI.handleLeftButtonRelease;
 
   // Clear handlers so we don't chain them twice (once when this interactor calls it's super handler
   // and once when we call the original handler).
   publicAPI.handleLeftButtonPress = null;
-  publicAPI.handleLeftButtonRelease = null;
 
   // Object specific methods
   vtkInteractorStyleRotatableMPRCrosshairs(publicAPI, model);
 
+  // Finalize the custom manipulators.
+  CustomBase.finalize(publicAPI, model);
+
   // Get the newly set mouse handlers.
   const newHandleLeftButtonPress = publicAPI.handleLeftButtonPress;
-  const newHandleLeftButtonRelease = publicAPI.handleLeftButtonRelease;
 
   // Set a custom handler for this method.
   publicAPI.handleLeftButtonPress = callData => {
@@ -207,12 +207,6 @@ function addCustomInteractor(publicAPI, model) {
     } else {
       originalHandleLeftButtonPress(callData);
     }
-  };
-
-  // Set a custom handler for this method.
-  publicAPI.handleLeftButtonRelease = callData => {
-    newHandleLeftButtonRelease(callData);
-    originalHandleLeftButtonRelease(callData);
   };
 }
 
@@ -902,10 +896,12 @@ function vtkInteractorStyleRotatableMPRCrosshairs(publicAPI, model) {
   };
 
   publicAPI.superHandleLeftButtonRelease = publicAPI.handleLeftButtonRelease;
+  /*
   // Fixes a requirement for publicAPI.superHandleLeftButtonRelease to exist here and elsewhere.
   if (!publicAPI.superHandleLeftButtonRelease) {
     publicAPI.superHandleLeftButtonRelease = () => {};
   }
+  */
   publicAPI.handleLeftButtonRelease = callData => {
     // Remember if the crosshairs were being moved.
     const isMovingCrosshairs = publicAPI.movingCrosshairs();

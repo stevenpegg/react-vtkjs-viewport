@@ -19,7 +19,7 @@ function initialize(publicAPI, model) {
   /**
    * Perform so additional procession on the mouse event to detect double clicks.
    */
-  function handleMouseButton(callData, button) {
+  publicAPI.handleMouseButton = (callData, button) => {
     let isDoubleClick = false;
 
     // Double click detection.
@@ -45,7 +45,7 @@ function initialize(publicAPI, model) {
 
     // Process as a normal mouse down event.
     publicAPI.customHandleMouse(callData, button, isDoubleClick);
-  }
+  };
 
   const superHandleMouseMove = publicAPI.handleMouseMove;
   publicAPI.handleMouseMove = callData => {
@@ -64,14 +64,15 @@ function initialize(publicAPI, model) {
   /**
    * Clear all mouse state information and stop the current interaction operation.
    */
-  function clearMouseInteractionOperation(model) {
+  publicAPI.clearMouseInteractionOperation = model => {
+    console.log('clearMouseInteractionOperation: all buttons released');
     // Clear the interaction operation NONE.
     model.interactionOperation = InteractionOperations.NONE;
     // Release all buttons.
     model.leftMouse = false;
     model.middleMouse = false;
     model.rightMouse = false;
-  }
+  };
 
   const superHandleLeftButtonPress = publicAPI.handleLeftButtonPress;
   publicAPI.handleLeftButtonPress = callData => {
@@ -80,25 +81,9 @@ function initialize(publicAPI, model) {
     // Move the crosshairs (no modifier keys down)
     if (!callData.shiftKey && !callData.controlKey && !callData.altKey) {
       publicAPI.startWindowLevel();
-      handleMouseButton(callData, 1);
+      publicAPI.handleMouseButton(callData, 1);
     } else if (superHandleLeftButtonPress) {
       superHandleLeftButtonPress(callData);
-    }
-  };
-
-  publicAPI.superHandleLeftButtonRelease = publicAPI.handleLeftButtonRelease;
-  publicAPI.handleLeftButtonRelease = () => {
-    // Release all buttons and stop the current interaction operation.
-    clearMouseInteractionOperation(model);
-    console.log('handleLeftButtonRelease');
-    switch (model.state) {
-      case States.IS_WINDOW_LEVEL:
-        publicAPI.endWindowLevel();
-        break;
-
-      default:
-        publicAPI.superHandleLeftButtonRelease();
-        break;
     }
   };
 
@@ -108,9 +93,21 @@ function initialize(publicAPI, model) {
     console.log('handleMiddleButtonPress', callData);
     if (!callData.shiftKey && !callData.controlKey && !callData.altKey) {
       publicAPI.startWindowLevel();
-      handleMouseButton(callData, 2);
+      publicAPI.handleMouseButton(callData, 2);
     } else if (superHandleMiddleButtonPress) {
       superHandleMiddleButtonPress(callData);
+    }
+  };
+
+  const superHandleRightButtonPress = publicAPI.handleRightButtonPress;
+  publicAPI.handleRightButtonPress = callData => {
+    model.rightMouse = true;
+    console.log('handleRightButtonPress', callData);
+    if (!callData.shiftKey && !callData.controlKey && !callData.altKey) {
+      publicAPI.startWindowLevel();
+      publicAPI.handleMouseButton(callData, 3);
+    } else if (superHandleRightButtonPress) {
+      superHandleRightButtonPress(callData);
     }
   };
 
@@ -118,7 +115,7 @@ function initialize(publicAPI, model) {
     publicAPI.handleMiddleButtonRelease;
   publicAPI.handleMiddleButtonRelease = () => {
     // Release all buttons and stop the current interaction operation.
-    clearMouseInteractionOperation(model);
+    publicAPI.clearMouseInteractionOperation(model);
     console.log('handleMiddleButtonRelease');
     switch (model.state) {
       case States.IS_WINDOW_LEVEL:
@@ -131,22 +128,10 @@ function initialize(publicAPI, model) {
     }
   };
 
-  const superHandleRightButtonPress = publicAPI.handleRightButtonPress;
-  publicAPI.handleRightButtonPress = callData => {
-    model.rightMouse = true;
-    console.log('handleRightButtonPress', callData);
-    if (!callData.shiftKey && !callData.controlKey && !callData.altKey) {
-      publicAPI.startWindowLevel();
-      handleMouseButton(callData, 3);
-    } else if (superHandleRightButtonPress) {
-      superHandleRightButtonPress(callData);
-    }
-  };
-
   publicAPI.superHandleRightButtonRelease = publicAPI.handleRightButtonRelease;
   publicAPI.handleRightButtonRelease = () => {
     // Release all buttons and stop the current interaction operation.
-    clearMouseInteractionOperation(model);
+    publicAPI.clearMouseInteractionOperation(model);
     console.log('handleRightButtonRelease');
     switch (model.state) {
       case States.IS_WINDOW_LEVEL:
@@ -183,6 +168,30 @@ function initialize(publicAPI, model) {
   };
 }
 
+/**
+ * Initialize any additional publicAPI functions we may need AFTER applying
+ * and standard interactor adjustments. In particular apply any mouse handler
+ * changes here that should happen AFTER the interactor has had a chance to
+ * apply the interaction.
+ */
+function finalize(publicAPI, model) {
+  publicAPI.superHandleLeftButtonRelease = publicAPI.handleLeftButtonRelease;
+  publicAPI.handleLeftButtonRelease = () => {
+    // Always let vtk perform its actions on the release first.
+    publicAPI.superHandleLeftButtonRelease();
+    // Release all buttons and stop the current interaction operation.
+    publicAPI.clearMouseInteractionOperation(model);
+    console.log('handleLeftButtonRelease');
+    switch (model.state) {
+      case States.IS_WINDOW_LEVEL:
+        publicAPI.endWindowLevel();
+        break;
+      default:
+        break;
+    }
+  };
+}
+
 const DEFAULT_VALUES = {
   // The current interaction operation.
   interactionOperation: InteractionOperations.NONE,
@@ -196,6 +205,7 @@ const DEFAULT_VALUES = {
 
 const defaults = {
   initialize,
+  finalize,
   DEFAULT_VALUES,
 };
 export default defaults;
