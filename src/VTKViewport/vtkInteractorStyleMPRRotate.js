@@ -51,6 +51,9 @@ function vtkInteractorStyleMPRRotate(publicAPI, model) {
     model.rotateStartPos[1] = Math.round(pos[1]);
 
     const { apis, apiIndex } = model;
+
+    if (!apis || apiIndex === undefined) return;
+
     const api = apis[apiIndex];
 
     if (

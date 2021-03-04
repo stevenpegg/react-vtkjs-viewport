@@ -22,6 +22,7 @@ function getWidgetNode(svgContainer, widgetId) {
 function vtkSVGRotatableCrosshairsWidget(publicAPI, model) {
   model.classHierarchy.push('vtkSVGRotatableCrosshairsWidget');
   model.widgetId = `vtkSVGRotatableCrosshairsWidget-${instanceId++}`;
+
   model.calculateReferenceLines = (apiIndex, point) => {
     const { strokeColors, apis } = model;
     if (point[0] === null || point[1] === null) {
