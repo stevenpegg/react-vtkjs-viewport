@@ -52,6 +52,9 @@ export default function sortDatasetsByImagePosition(
   const spacing = Math.abs(distances[1] - distances[0]);
   console.log('sortDatasetsByImagePosition spacing');
   console.log(spacing);
+  for (let i = 0; i < distances.length - 1; i++) {
+    console.log('distance', i, Math.abs(distances[i + 1] - distances[i]));
+  }
 
   return {
     spacing,
