@@ -11,9 +11,14 @@ export default function sortDatasetsByImagePosition(
 ) {
   // See https://github.com/dcmjs-org/dcmjs/blob/4849ed50db8788741c2773b3d9c75cc52441dbcb/src/normalizers.js#L167
   // TODO: Find a way to make this code generic?
+  console.log('imageMetaDataMap');
+  console.log(imageMetaDataMap);
 
   const datasets = Array.from(imageMetaDataMap.values());
   const referenceDataset = datasets[0];
+
+  console.log('datasets');
+  console.log(datasets);
 
   const distanceDatasetPairs = datasets.map(function(dataset) {
     const positionVector = vec3.sub(
@@ -42,7 +47,8 @@ export default function sortDatasetsByImagePosition(
   //const spacing = mean(diff(distances));
   console.log('sortDatasetsByImagePosition distances');
   console.log(distances[0]);
-  console.log(distances[1]);
+  console.log(distances[0]);
+  console.log('all distances', distances);
   const spacing = Math.abs(distances[1] - distances[0]);
   console.log('sortDatasetsByImagePosition spacing');
   console.log(spacing);
