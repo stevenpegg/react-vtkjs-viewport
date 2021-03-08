@@ -40,7 +40,12 @@ export default function sortDatasetsByImagePosition(
   // we have missing slices.
   // - Should we just bail out for now if missing slices are present?
   //const spacing = mean(diff(distances));
+  console.log('sortDatasetsByImagePosition distances');
+  console.log(distances[0]);
+  console.log(distances[1]);
   const spacing = Math.abs(distances[1] - distances[0]);
+  console.log('sortDatasetsByImagePosition spacing');
+  console.log(spacing);
 
   return {
     spacing,

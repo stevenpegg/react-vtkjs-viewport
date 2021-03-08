@@ -48,20 +48,6 @@ function initialize(publicAPI, model) {
     publicAPI.customHandleMouse(callData, button, isDoubleClick);
   };
 
-  const superHandleMouseMove = publicAPI.handleMouseMove;
-  publicAPI.handleMouseMove = callData => {
-    // Clear the double click detection if the mouse has moved.
-    model.lastClickButton = 0;
-    model.lastClickTime = null;
-    if (model.state === States.IS_WINDOW_LEVEL) {
-      // Process the mouse move.
-      publicAPI.customHandleMouse(callData, 0, false);
-    }
-    if (superHandleMouseMove) {
-      superHandleMouseMove(callData);
-    }
-  };
-
   /**
    * Clear all mouse state information and stop the current interaction operation.
    */
@@ -110,6 +96,20 @@ function initialize(publicAPI, model) {
  * apply the interaction.
  */
 function finalize(publicAPI, model) {
+  const superHandleMouseMove = publicAPI.handleMouseMove;
+  publicAPI.handleMouseMove = callData => {
+    // Clear the double click detection if the mouse has moved.
+    model.lastClickButton = 0;
+    model.lastClickTime = null;
+    if (model.state === States.IS_WINDOW_LEVEL) {
+      // Process the mouse move.
+      publicAPI.customHandleMouse(callData, 0, false);
+    }
+    if (superHandleMouseMove) {
+      superHandleMouseMove(callData);
+    }
+  };
+
   const superHandleLeftButtonPress = publicAPI.handleLeftButtonPress;
   publicAPI.handleLeftButtonPress = callData => {
     // console.log('handleLeftButtonPress', callData);
