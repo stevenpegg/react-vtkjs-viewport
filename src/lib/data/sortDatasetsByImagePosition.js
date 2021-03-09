@@ -56,6 +56,14 @@ export default function sortDatasetsByImagePosition(
     console.log('distance', i, Math.abs(distances[i + 1] - distances[i]));
   }
 
+  // Remove any slices that share the same position as the next slice.
+  for (let i = distances.length - 1; i > 0; i--) {
+    if (Math.abs(distances[i - 1] - distances[i]) <= 0.0) {
+      sortedDatasets.splice(i, 1);
+      distances.splice(i, 1);
+    }
+  }
+
   return {
     spacing,
     origin: distanceDatasetPairs[0].dataset.imagePositionPatient,
