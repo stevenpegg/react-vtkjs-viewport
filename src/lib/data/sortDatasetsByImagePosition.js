@@ -51,11 +51,13 @@ export default function sortDatasetsByImagePosition(
 
   // Remove any slices that share the same position as the next slice.
   for (let i = distances.length - 1; i > 0; i--) {
-    if (Math.abs(distances[i - 1] - distances[i]) <= 0.0) {
+    if (Math.abs(distances[i - 1] - distances[i]) <= 0.0001) {
+      console.log('Removing slice', i);
       sortedDatasets.splice(i, 1);
       distances.splice(i, 1);
     }
   }
+  console.log('There are now', distances.length, 'slices');
 
   // TODO: The way we calculate spacing determines how the volume shows up if
   // we have missing slices.
