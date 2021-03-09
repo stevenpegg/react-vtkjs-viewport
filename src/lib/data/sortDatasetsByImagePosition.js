@@ -41,17 +41,10 @@ export default function sortDatasetsByImagePosition(
   const sortedDatasets = distanceDatasetPairs.map(a => a.dataset);
   const distances = distanceDatasetPairs.map(a => a.distance);
 
-  // TODO: The way we calculate spacing determines how the volume shows up if
-  // we have missing slices.
-  // - Should we just bail out for now if missing slices are present?
-  //const spacing = mean(diff(distances));
   console.log('sortDatasetsByImagePosition distances');
   console.log(distances[0]);
   console.log(distances[0]);
   console.log('all distances', distances);
-  const spacing = Math.abs(distances[1] - distances[0]);
-  console.log('sortDatasetsByImagePosition spacing');
-  console.log(spacing);
   for (let i = 0; i < distances.length - 1; i++) {
     console.log('distance', i, Math.abs(distances[i + 1] - distances[i]));
   }
@@ -63,6 +56,14 @@ export default function sortDatasetsByImagePosition(
       distances.splice(i, 1);
     }
   }
+
+  // TODO: The way we calculate spacing determines how the volume shows up if
+  // we have missing slices.
+  // - Should we just bail out for now if missing slices are present?
+  //const spacing = mean(diff(distances));
+  const spacing = Math.abs(distances[1] - distances[0]);
+  console.log('sortDatasetsByImagePosition spacing');
+  console.log(spacing);
 
   return {
     spacing,
