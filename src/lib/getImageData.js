@@ -25,12 +25,16 @@ export default function getImageData(imageIds, displaySetInstanceUid) {
     metaDataMap
   );
 
+  // Remove any slices with duplicate positional information.
+  console.log('MetaDataMap', metaDataMap);
+  console.log('sortedDatasets', sortedDatasets);
+
   const xSpacing = metaData0.columnPixelSpacing;
   const ySpacing = metaData0.rowPixelSpacing;
   const zSpacing = spacing;
   const xVoxels = metaData0.columns;
   const yVoxels = metaData0.rows;
-  const zVoxels = metaDataMap.size;
+  const zVoxels = sortedDatasets.size;
   const signed = imageMetaData0.pixelRepresentation === 1;
   const multiComponent = metaData0.numberOfComponents > 1;
 
