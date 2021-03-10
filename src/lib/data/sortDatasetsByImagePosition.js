@@ -40,9 +40,7 @@ export default function sortDatasetsByImagePosition(
   for (let i = distances.length - 1; i > 0; i--) {
     const distance = Math.abs(distances[i] - distances[i - 1]);
     if (distance === 0.0) {
-      console.log(
-        `Slice ${i} and ${i - 1} have the same location, removing slice ${i}`
-      );
+      // console.log(`Slice ${i} and ${i - 1} have the same location, removing slice ${i}`);
       sortedDatasets.splice(i, 1);
       distances.splice(i, 1);
     }

@@ -25,10 +25,6 @@ export default function getImageData(imageIds, displaySetInstanceUid) {
     metaDataMap
   );
 
-  // Remove any slices with duplicate positional information.
-  console.log('MetaDataMap', metaDataMap);
-  console.log('sortedDatasets', sortedDatasets);
-
   const xSpacing = metaData0.columnPixelSpacing;
   const ySpacing = metaData0.rowPixelSpacing;
   const zSpacing = spacing;
