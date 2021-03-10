@@ -67,7 +67,15 @@ export default function sortDatasetsByImagePosition(
   // const spacing = mean(diff(distances));
   let spacing = Math.abs(distances[1] - distances[0]);
   console.log('sortDatasetsByImagePosition spacing', spacing);
-  spacing = mean(diff(distances));
+  if (distances.length > 0) {
+    let minDistance = distances[0];
+    let maxDistance = distances[0];
+    for (let i = 1; i < distances.length; i++) {
+      minDistance = Math.min(minDistance, distances[i]);
+      maxDistance = Math.max(maxDistance, distances[i]);
+    }
+    spacing = (maxDistance - minDistance) / distances.length;
+  }
   console.log('sortDatasetsByImagePosition spacing NOW', spacing);
 
   return {
