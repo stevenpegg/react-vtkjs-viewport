@@ -34,7 +34,7 @@ export default function getImageData(imageIds, displaySetInstanceUid) {
   const zSpacing = spacing;
   const xVoxels = metaData0.columns;
   const yVoxels = metaData0.rows;
-  const zVoxels = sortedDatasets.size;
+  const zVoxels = sortedDatasets.length;
   const signed = imageMetaData0.pixelRepresentation === 1;
   const multiComponent = metaData0.numberOfComponents > 1;
 
